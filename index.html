@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>World GDP Metrics</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <!-- Bootstrap 5 -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Select2 CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        background-color: #f4f0ec;
+      }
+      .map-container {
+        text-align: center;
+        margin-top: 20px;
+      }
+      svg {
+        display: block;
+        margin: auto;
+        max-width: 100%;
+      }
+      .tooltip {
+        position: absolute;
+        background: white;
+        border: 1px solid #aaa;
+        padding: 6px 10px;
+        border-radius: 4px;
+        pointer-events: none;
+        opacity: 0;
+        font-size: 13px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      .legend {
+        width: 300px;
+        height: 10px;
+        margin: 10px auto;
+        background: linear-gradient(to right, #deebf7, #3182bd);
+        border: 1px solid #ccc;
+      }
+      .legend-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        width: 300px;
+        margin: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container py-4">
+      <h2 class="text-center mb-4">
+        World Heatmap - GDP / Population / GDP per Capita
+      </h2>
+
+      <!-- Metric and Year Controls -->
+      <div class="row justify-content-center mb-4">
+        <div class="col-auto">
+          <label class="form-label" for="metric">Metric</label>
+          <select class="form-select" id="metric">
+            <option value="gdpPerCapita">GDP per Capita</option>
+            <option value="gdp">Total GDP</option>
+            <option value="population">Population</option>
+          </select>
+        </div>
+        <div class="col-auto">
+          <label class="form-label" for="year"
+            >Year: <span id="yearLabel">2022</span></label
+          >
+          <input
+            type="range"
+            class="form-range"
+            id="year"
+            min="2000"
+            max="2022"
+            value="2022"
+          />
+        </div>
+      </div>
+
+      <div class="legend"></div>
+      <div class="legend-labels mb-4">
+        <span>Low</span>
+        <span>High</span>
+      </div>
+
+      <!-- Map SVG -->
+      <div class="map-container">
+        <svg id="map" width="960" height="550"></svg>
+      </div>
+
+      <div id="tooltip" class="tooltip"></div>
+
+      <hr />
+      <h4 class="text-center">Bar Chart - Country-wise Comparison</h4>
+
+      <!-- Bar Chart Controls -->
+      <div class="row justify-content-center mb-3">
+        <div class="col-auto">
+          <select id="barType" class="form-select">
+            <option value="top">Top 5 GDP per Capita</option>
+            <option value="bottom">Bottom 5 GDP per Capita</option>
+            <option value="custom">Custom 5 Countries</option>
+          </select>
+        </div>
+
+        <!-- Multi-select Dropdown -->
+        <div class="col-auto d-none" id="customCountries">
+          <select
+            id="customInput"
+            class="form-select"
+            multiple="multiple"
+            style="width: 300px"
+          ></select>
+        </div>
+      </div>
+
+      <!-- Bar Chart Legend -->
+      <div class="d-flex justify-content-center align-items-center mb-3">
+        <div class="me-3 d-flex align-items-center">
+          <div
+            style="
+              width: 20px;
+              height: 10px;
+              background-color: #69b3a2;
+              margin-right: 5px;
+            "
+          ></div>
+          <span>Population</span>
+        </div>
+        <div class="d-flex align-items-center">
+          <div
+            style="
+              width: 20px;
+              height: 10px;
+              background-color: #4a90e2;
+              margin-right: 5px;
+            "
+          ></div>
+          <span>GDP</span>
+        </div>
+      </div>
+
+      <svg id="barChart" width="900" height="400"></svg>
+
+      <!-- Trend Chart Modal -->
+      <div class="modal fade" id="trendModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">5-Year Trend</h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <!-- Year dropdown for selecting trend end year -->
+              <div class="mb-3">
+                <label for="trendYear" class="form-label">Select Year:</label>
+                <select
+                  id="trendYear"
+                  class="form-select form-select-sm form-select-line-height"
+                  style="width: 10rem"
+                ></select>
+              </div>
+              <svg id="trendChart" width="900" height="500"></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="map-bar-chart.js"></script>
+  </body>
+</html>
