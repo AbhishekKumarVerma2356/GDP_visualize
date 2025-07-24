@@ -21,6 +21,9 @@
     <style>
       body {
         background-color: #f4f0ec;
+        height: 100%;
+        width: 100%;
+        overflow: auto;
       }
       .map-container {
         text-align: center;
@@ -109,8 +112,8 @@
       <div class="row justify-content-center mb-3">
         <div class="col-auto">
           <select id="barType" class="form-select">
-            <option value="top">Top 5 GDP per Capita</option>
-            <option value="bottom">Bottom 5 GDP per Capita</option>
+            <option value="top">Top 5 GDP</option>
+            <option value="bottom">Bottom 5 GDP</option>
             <option value="custom">Custom 5 Countries</option>
           </select>
         </div>
@@ -152,7 +155,10 @@
         </div>
       </div>
 
-      <svg id="barChart" width="900" height="400"></svg>
+      <svg id="barChart" width="1000" height="400"></svg>
+      <div style="float: right">
+        Note: Click on bar tocsee 5-year trend of that Country.
+      </div>
 
       <!-- Trend Chart Modal -->
       <div class="modal fade" id="trendModal" tabindex="-1" aria-hidden="true">
@@ -168,15 +174,56 @@
             </div>
             <div class="modal-body">
               <!-- Year dropdown for selecting trend end year -->
-              <div class="mb-3">
-                <label for="trendYear" class="form-label">Select Year:</label>
+              <div class="mb-2">
+                <label for="trendYear" class="form-label">Select N Year:</label>
                 <select
                   id="trendYear"
                   class="form-select form-select-sm form-select-line-height"
                   style="width: 10rem"
                 ></select>
+                <!-- Trend Chart Legend -->
+                <div
+                  class="d-flex justify-content-center align-items-center mb-3"
+                >
+                  <div class="me-3 d-flex align-items-center">
+                    <div
+                      style="
+                        width: 20px;
+                        height: 10px;
+                        background-color: #69b3a2;
+                        margin-right: 5px;
+                      "
+                    ></div>
+                    <span>Population</span>
+                  </div>
+                  <div class="me-3 d-flex align-items-center">
+                    <div
+                      style="
+                        width: 20px;
+                        height: 10px;
+                        background-color: #4a90e2;
+                        margin-right: 5px;
+                      "
+                    ></div>
+                    <span>GDP</span>
+                  </div>
+                  <div class="d-flex align-items-center">
+                    <div
+                      style="
+                        width: 20px;
+                        height: 10px;
+                        background-color: #e2724aff;
+                        margin-right: 5px;
+                      "
+                    ></div>
+                    <span>GDP Per Capital</span>
+                  </div>
+                </div>
               </div>
-              <svg id="trendChart" width="900" height="500"></svg>
+              <div class="d-flex">
+                <svg id="trendChart" width="500" height="500"></svg>
+                <svg id="trendChartGDPpCap" width="500" height="500"></svg>
+              </div>
             </div>
           </div>
         </div>
