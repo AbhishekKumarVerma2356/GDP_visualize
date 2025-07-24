@@ -145,11 +145,14 @@ $("#customInput").on("change", renderBarChart);
 d3.select("#trendYear").on("change", function () {
   const selectedYear = +this.value;
   const code = d3.select("#trendChart").attr("data-country-code");
-  if (code) drawTrend(code, selectedYear);
+  if (code) {
+    drawTrend(code, selectedYear);
+    drawTrendGdpCap(code, selectedYear);
+  }
 });
 
 const barSvg = d3.select("#barChart"),
-  barMargin = { top: 30, right: 100, bottom: 50, left: 100 },
+  barMargin = { top: 30, right: 150, bottom: 50, left: 150 },
   barWidth = +barSvg.attr("width") - barMargin.left - barMargin.right,
   barHeight = +barSvg.attr("height") - barMargin.top - barMargin.bottom,
   barG = barSvg
@@ -163,13 +166,13 @@ function renderBarChart() {
   const mode = d3.select("#barType").property("value");
   if (mode === "top") {
     entries = entries
-      .filter((d) => d.gdpPerCapita)
-      .sort((a, b) => b.gdpPerCapita - a.gdpPerCapita)
+      .filter((d) => d.gdp)
+      .sort((a, b) => b.gdp - a.gdp)
       .slice(0, 5);
   } else if (mode === "bottom") {
     entries = entries
-      .filter((d) => d.gdpPerCapita)
-      .sort((a, b) => a.gdpPerCapita - b.gdpPerCapita)
+      .filter((d) => d.gdp)
+      .sort((a, b) => a.gdp - b.gdp)
       .slice(0, 5);
   } else {
     const input = $("#customInput").val() || [];
@@ -213,7 +216,7 @@ function renderBarChart() {
   barG
     .append("text")
     .attr("transform", "rotate(-90)")
-    .attr("y", -70)
+    .attr("y", -80)
     .attr("x", -barHeight / 2)
     .attr("text-anchor", "middle")
     .text("Population");
@@ -222,7 +225,7 @@ function renderBarChart() {
     .append("text")
     .attr(
       "transform",
-      `translate(${barWidth + 100}, ${barHeight / 2}) rotate(-90)`
+      `translate(${barWidth + 120}, ${barHeight / 2}) rotate(-90)`
     )
     .attr("text-anchor", "middle")
     .text("GDP (USD)");
@@ -240,7 +243,12 @@ function renderBarChart() {
     .attr("fill", "#69b3a2")
     .on("click", (event, d) => showTrend(d.code, currentYear, d.country))
     .append("title")
-    .text((d) => `GDP/cap: $${Math.round(d.gdpPerCapita)}`);
+    .text(
+      (d) =>
+        `Population: ${Math.round(
+          d.population
+        )} \nGDP per Capital: $${Math.round(d.gdpPerCapita)}`
+    );
 
   barG
     .selectAll(".bar-gdp")
@@ -254,12 +262,19 @@ function renderBarChart() {
     .attr("fill", "#4a90e2")
     .on("click", (event, d) => showTrend(d.code, currentYear, d.country))
     .append("title")
-    .text((d) => `GDP/cap: $${Math.round(d.gdpPerCapita)}`);
+    .text(
+      (d) =>
+        `GDP: $${Math.round(d.gdp)} \nGDP per Capital: $${Math.round(
+          d.gdpPerCapita
+        )}`
+    );
 }
 
 function showTrend(code, year = currentYear, countryName = "") {
   d3.select("#trendYear").property("value", year);
+  d3.select("#trendChartGDPpCap").property("value", year);
   drawTrend(code, year, countryName);
+  drawTrendGdpCap(code, year, countryName);
 
   // Show modal only once
   const modal = new bootstrap.Modal(document.getElementById("trendModal"));
@@ -324,7 +339,7 @@ function drawTrend(code, year, countryName = "") {
     .attr("text-anchor", "middle")
     .text("Population");
   g.append("text")
-    .attr("transform", `translate(${w + 100}, ${h / 2}) rotate(-90)`)
+    .attr("transform", `translate(${w + 120}, ${h / 2}) rotate(-90)`)
     .attr("text-anchor", "middle")
     .text("GDP (USD)");
 
@@ -390,6 +405,95 @@ function drawTrend(code, year, countryName = "") {
       trendTooltip
         .style("opacity", 1)
         .html(`Year: ${d.year}<br>GDP: $${Math.round(d.gdp).toLocaleString()}`);
+    })
+    .on("mousemove", (event) => {
+      trendTooltip
+        .style("left", event.pageX + 10 + "px")
+        .style("top", event.pageY - 30 + "px");
+    })
+    .on("mouseout", () => trendTooltip.style("opacity", 0));
+}
+
+function drawTrendGdpCap(code, year, countryName = "") {
+  // d3.select(".modal-title").text(`5-Year Trend - ${countryName}`);
+  const allYears = Object.keys(dataByYear)
+    .map(Number)
+    .sort((a, b) => a - b);
+  const validYears = allYears.filter((y) => y <= year).slice(-5);
+  const data = validYears.map((y) => {
+    const d = dataByYear[y]?.[code];
+    return { year: y, gdpPerCapita: d?.gdpPerCapita || 0 };
+  });
+
+  const svg = d3.select("#trendChartGDPpCap");
+  svg.selectAll("*").remove();
+  svg.attr("data-country-code", code);
+
+  const margin = { top: 30, right: 50, bottom: 50, left: 100 },
+    w = +svg.attr("width") - margin.left - margin.right,
+    h = +svg.attr("height") - margin.top - margin.bottom,
+    g = svg
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+
+  const x = d3
+    .scaleBand()
+    .domain(data.map((d) => d.year))
+    .range([0, w])
+    .padding(0.1);
+  const yLeft = d3
+    .scaleLinear()
+    .domain([0, d3.max(data, (d) => d.gdpPerCapita)])
+    .nice()
+    .range([h, 0]);
+
+  g.append("g")
+    .attr("transform", `translate(0,${h})`)
+    .call(d3.axisBottom(x).tickFormat(d3.format("d")));
+  g.append("g").call(d3.axisLeft(yLeft));
+
+  g.append("text")
+    .attr("x", w / 2)
+    .attr("y", h + 40)
+    .attr("text-anchor", "middle")
+    .text("Year");
+  g.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", -50)
+    .attr("x", -h / 2)
+    .attr("text-anchor", "middle")
+    .text("GDP per Cap (USD)");
+
+  const lineGdpCap = d3
+    .line()
+    .x((d) => x(d.year) + x.bandwidth() / 2)
+    .y((d) => yLeft(d.gdpPerCapita));
+
+  g.append("path")
+    .datum(data)
+    .attr("fill", "none")
+    .attr("stroke", "#e2724aff")
+    .attr("stroke-width", 2)
+    .attr("d", lineGdpCap);
+
+  const trendTooltip = d3
+    .select("body")
+    .append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+  g.selectAll(".circle-pop")
+    .data(data)
+    .enter()
+    .append("circle")
+    .attr("cx", (d) => x(d.year) + x.bandwidth() / 2)
+    .attr("cy", (d) => yLeft(d.gdpPerCapita))
+    .attr("r", 4)
+    .attr("fill", "#e2724aff")
+    .on("mouseover", (event, d) => {
+      trendTooltip
+        .style("opacity", 1)
+        .html(`Year: ${d.year}<br>GDP per Captial :${d.gdpPerCapita} $`);
     })
     .on("mousemove", (event) => {
       trendTooltip
