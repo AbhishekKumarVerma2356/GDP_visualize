@@ -493,7 +493,7 @@ function drawTrendGdpCap(code, year, countryName = "") {
     .on("mouseover", (event, d) => {
       trendTooltip
         .style("opacity", 1)
-        .html(`Year: ${d.year}<br>GDP per Captial :${d.gdpPerCapita} $`);
+        .html(`Year: ${d.year}<br>GDP per Captial : ${d.gdpPerCapita} $`);
     })
     .on("mousemove", (event) => {
       trendTooltip
